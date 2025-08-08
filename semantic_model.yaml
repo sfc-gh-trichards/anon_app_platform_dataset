@@ -3,7 +3,6 @@ description: Usage data for a paid-app platform where developers publish apps an
 
 tables:
   - name: anon_views
-    description: One row per individual app view (all IDs anonymized).
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -11,37 +10,115 @@ tables:
     dimensions:
       - name: APP_ID
         expr: APP_ID
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the application being viewed.
+        sample_values:
+          - bf6a4606617b8d6c5d12439401251f47
+          - c79ac241a6c433a5b238c19dd73e0f99
+          - 08f9de4004cd4de8a0c97e40d3c1f19b
+        synonyms:
+          - app_identifier
+          - application_id
+          - app_key
       - name: USER_ID
         expr: USER_ID
-        data_type: NUMBER(38,0)
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the end user who generated the view event.
+        sample_values:
+          - fd4261b963ce9443bb64b8a194834bf9
+          - f09c4cf607ebdf36ed3f99cd684eb2fb
+          - 2867999e88eb1bdf02a88bde2e22ffb1
+        synonyms:
+          - user_identifier
+          - viewer_id
+          - customer_user_id
       - name: COMPANY_ID
         expr: COMPANY_ID
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the customer organization associated with the view.
+        sample_values:
+          - a49af8b88ffb8523251aa2d7d08271d7
+          - 32c603ab143bce03dc71ea4aa49eabee
+          - 208b5f1f470f3aa42c6e98dd813b9567
+        synonyms:
+          - organization_id
+          - account_id
+          - customer_id
       - name: STATUS
         expr: STATUS
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Commercial status of the company at the time of the view.
+        sample_values:
+          - Paying
+          - Trialing
+        synonyms:
+          - company_status
+          - subscription_status
+          - account_status
     time_dimensions:
       - name: VIEW_TIME
         expr: VIEW_TIME
-        data_type: TIMESTAMP_NTZ
+        data_type: TIMESTAMP_NTZ(9)
+        description: Timestamp when the individual view occurred.
+        sample_values:
+          - 2024-10-04 13:05:42.856
+          - 2024-07-31 15:13:14.008
+          - 2024-06-05 18:49:54.689
+        synonyms:
+          - event_time
+          - view_timestamp
       - name: VIEW_DATE
         expr: VIEW_DATE
         data_type: DATE
+        description: Calendar date of the view event.
+        sample_values:
+          - '2024-10-04'
+          - '2024-07-31'
+          - '2024-06-05'
+        synonyms:
+          - event_date
+          - date
+          - ds
     facts:
       - name: TOTAL_VIEW_TIME_SEC
         expr: TOTAL_VIEW_TIME
         data_type: FLOAT
+        description: Total time the app was viewed during this event, in seconds.
+        sample_values:
+          - '906.787'
+          - '35.702'
+          - '113.559'
+        synonyms:
+          - view_duration_seconds
+          - watch_time
+          - time_spent
       - name: TOTAL_AMOUNT_SPENT
         expr: TOTAL_AMOUNT_SPENT
         data_type: FLOAT
+        description: Monetary amount charged for this view event.
+        sample_values:
+          - '0.2087002472'
+          - '0.0281608133'
+          - '0.6065789015'
+        synonyms:
+          - charge_amount
+          - spend
+          - revenue
       - name: VIEW_COUNT
         expr: 1
         data_type: NUMBER(18,0)
         default_aggregation: SUM
+        description: Helper metric that counts one per view event; useful for aggregations.
+        sample_values:
+          - '1'
+        synonyms:
+          - views
+          - page_views
+          - impression_count
+    description: One row per individual app view (all IDs anonymized).
+    synonyms: []
 
   - name: anon_user_day_fact
-    description: Daily roll-up of each user’s activity and spend.
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -49,33 +126,102 @@ tables:
     dimensions:
       - name: USER_ID
         expr: USER_ID
-        data_type: NUMBER(38,0)
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the user aggregated at the daily level.
+        sample_values:
+          - 0000e977e8fb4a09763763b73e383061
+          - 00011693f3be6dca76265ec6c0f934e9
+          - 0002755e90eb6435ee48887c2577ae03
+        synonyms:
+          - user_identifier
+          - user_key
+          - customer_user_id
       - name: COMPANY_ID
         expr: COMPANY_ID
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the customer organization the user belongs to.
+        sample_values:
+          - c36480500c3b8dda170c5660efeeb935
+          - 8817ee846006f559c5deba90e9e298f5
+          - a4deb3e17a18a78e7e930ad0cade64b8
+        synonyms:
+          - organization_id
+          - account_id
+          - customer_id
       - name: STATUS
         expr: STATUS
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Commercial status of the company for the given day.
+        sample_values:
+          - Paying
+          - Trialing
+        synonyms:
+          - company_status
+          - subscription_status
+          - account_status
     time_dimensions:
       - name: VIEW_DATE
         expr: VIEW_DATE
         data_type: DATE
+        description: The date for which the user-level metrics are aggregated.
+        sample_values:
+          - '2024-08-27'
+          - '2024-11-08'
+          - '2024-06-12'
+        synonyms:
+          - date
+          - ds
     facts:
       - name: TOTAL_AMOUNT_SPENT
         expr: TOTAL_AMOUNT_SPENT
         data_type: FLOAT
+        description: Total charges accrued by the user on the given day.
+        sample_values:
+          - '1.1648675665'
+          - '6.7164334016'
+          - '0.2885114323'
+        synonyms:
+          - total_charges
+          - spend
+          - revenue
       - name: TOTAL_VIEW_TIME_SEC
         expr: TOTAL_VIEW_TIME
         data_type: FLOAT
+        description: Total time spent viewing apps by the user on the given day, in seconds.
+        sample_values:
+          - '1795.404'
+          - '5764.427'
+          - '1200.074'
+        synonyms:
+          - total_watch_time
+          - total_time_spent
       - name: DISTINCT_APP_COUNT
         expr: APP_COUNT
         data_type: NUMBER(18,0)
+        description: Number of distinct applications the user interacted with on the given day.
+        sample_values:
+          - '1'
+          - '2'
+          - '3'
+        synonyms:
+          - unique_apps
+          - distinct_apps
       - name: VIEW_COUNT
         expr: VIEW_COUNT
         data_type: NUMBER(18,0)
+        description: Total number of view events generated by the user on the given day.
+        sample_values:
+          - '1'
+          - '3'
+          - '10'
+        synonyms:
+          - views
+          - page_views
+          - impressions
+    description: Daily roll-up of each user’s activity and spend.
+    synonyms: []
 
   - name: anon_company_day_fact
-    description: Daily roll-up of each company’s usage and spend.
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -83,27 +229,96 @@ tables:
     dimensions:
       - name: COMPANY_ID
         expr: COMPANY_ID
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the customer organization at the company-day level.
+        sample_values:
+          - 00080d5c9c556dea4ee626775913a53d
+          - 0a7289a1bb51785a409672e3513c2168
+          - ec9f4affa4c238994c4c9bb0cde1b654
+        synonyms:
+          - organization_id
+          - account_id
+          - customer_id
       - name: STATUS
         expr: STATUS
-        data_type: VARCHAR
+        data_type: VARCHAR(16777216)
+        description: Commercial status of the company for the given day.
+        sample_values:
+          - Paying
+          - Trialing
+        synonyms:
+          - company_status
+          - subscription_status
+          - account_status
     time_dimensions:
       - name: VIEW_DATE
         expr: VIEW_DATE
         data_type: DATE
+        description: The date for which the company-level metrics are aggregated.
+        sample_values:
+          - '2023-11-03'
+          - '2023-12-12'
+          - '2024-09-30'
+        synonyms:
+          - date
+          - ds
     facts:
       - name: TOTAL_AMOUNT_SPENT
         expr: TOTAL_AMOUNT_SPENT
         data_type: FLOAT
+        description: Total charges accrued by the company on the given day.
+        sample_values:
+          - '1.9648290732'
+          - '8.4965298925'
+          - '0.6044873528'
+        synonyms:
+          - total_charges
+          - spend
+          - revenue
       - name: TOTAL_VIEW_TIME_SEC
         expr: TOTAL_VIEW_TIME
         data_type: FLOAT
+        description: Total time spent viewing apps by all users from the company on the given day, in seconds.
+        sample_values:
+          - '6723.599'
+          - '11188.581'
+          - '1003.117'
+        synonyms:
+          - total_watch_time
+          - total_time_spent
       - name: DISTINCT_APP_COUNT
         expr: APP_COUNT
         data_type: NUMBER(18,0)
+        description: Number of distinct applications used by the company on the given day.
+        sample_values:
+          - '1'
+          - '2'
+          - '3'
+        synonyms:
+          - unique_apps
+          - distinct_apps
       - name: VIEW_COUNT
         expr: VIEW_COUNT
         data_type: NUMBER(18,0)
+        description: Total number of view events generated by the company on the given day.
+        sample_values:
+          - '1'
+          - '5'
+          - '15'
+        synonyms:
+          - views
+          - page_views
+          - impressions
       - name: DISTINCT_USER_COUNT
         expr: USER_COUNT
         data_type: NUMBER(18,0)
+        description: Number of distinct users from the company who generated at least one view on the given day.
+        sample_values:
+          - '1'
+          - '2'
+          - '4'
+        synonyms:
+          - unique_users
+          - distinct_users
+    description: Daily roll-up of each company’s usage and spend.
+    synonyms: []
