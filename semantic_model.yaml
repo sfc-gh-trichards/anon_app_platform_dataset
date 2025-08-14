@@ -1,8 +1,9 @@
 name: paid_app_platform_anon
-description: Usage data for a paid-app platform where developers publish apps and customers view them. Charges accrue per view-time and amount spent.
+description: Usage data for a paid-app platform where developers publish apps and internal users view them. Each app will only be viewed inside a company. Charges accrue per view-time and amount spent, and are dependent on the compute intensity of the app. If the app uses a lot of compute, it will be more expensive per second viewed.
 
 tables:
   - name: anon_views
+    description: One row per individual app view. 
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -109,6 +110,7 @@ tables:
     synonyms: []
 
   - name: anon_user_day_fact
+    description: Daily roll-up of each user’s activity and spend.
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -202,6 +204,7 @@ tables:
     synonyms: []
 
   - name: anon_company_day_fact
+    description: Daily roll-up of each company’s usage and spend.
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
@@ -294,6 +297,7 @@ tables:
     synonyms: []
 
   - name: anon_company_date_dim
+    description: Company-date dimension with consistent INDUSTRY and time-varying STATUS. For each day, this contains the industry and status (trialing or paying) of the company. The trialing and paying status is consistent each day, but not all time.
     base_table:
       database: ANON
       schema: TEMP_SCHEMA
