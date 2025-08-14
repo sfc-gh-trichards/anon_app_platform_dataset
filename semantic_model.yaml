@@ -44,17 +44,7 @@ tables:
           - organization_id
           - account_id
           - customer_id
-      - name: STATUS
-        expr: STATUS
-        data_type: VARCHAR(16777216)
-        description: Commercial status of the company at the time of the view.
-        sample_values:
-          - Paying
-          - Trialing
-        synonyms:
-          - company_status
-          - subscription_status
-          - account_status
+      
     time_dimensions:
       - name: VIEW_TIME
         expr: VIEW_TIME
@@ -148,17 +138,7 @@ tables:
           - organization_id
           - account_id
           - customer_id
-      - name: STATUS
-        expr: STATUS
-        data_type: VARCHAR(16777216)
-        description: Commercial status of the company for the given day.
-        sample_values:
-          - Paying
-          - Trialing
-        synonyms:
-          - company_status
-          - subscription_status
-          - account_status
+      
     time_dimensions:
       - name: VIEW_DATE
         expr: VIEW_DATE
@@ -239,17 +219,7 @@ tables:
           - organization_id
           - account_id
           - customer_id
-      - name: STATUS
-        expr: STATUS
-        data_type: VARCHAR(16777216)
-        description: Commercial status of the company for the given day.
-        sample_values:
-          - Paying
-          - Trialing
-        synonyms:
-          - company_status
-          - subscription_status
-          - account_status
+      
     time_dimensions:
       - name: VIEW_DATE
         expr: VIEW_DATE
@@ -322,3 +292,84 @@ tables:
           - distinct_users
     description: Daily roll-up of each company’s usage and spend.
     synonyms: []
+
+  - name: anon_company_date_dim
+    base_table:
+      database: ANON
+      schema: TEMP_SCHEMA
+      table: anon_company_date_dim
+    dimensions:
+      - name: COMPANY_ID
+        expr: COMPANY_ID
+        data_type: VARCHAR(16777216)
+        description: Anonymized unique identifier for the customer organization.
+        synonyms:
+          - organization_id
+          - account_id
+          - customer_id
+      - name: INDUSTRY
+        expr: INDUSTRY
+        data_type: VARCHAR(16777216)
+        description: Stable industry classification for the company; does not change over time.
+        sample_values:
+          - Technology
+          - Healthcare
+          - Finance
+        synonyms:
+          - sector
+      - name: STATUS
+        expr: STATUS
+        data_type: VARCHAR(16777216)
+        description: Company status for the given date. For a realistic dataset, a random ~10% of companies that start as Trialing convert to Paying beginning on a randomly selected conversion date; status is Paying on and after that date.
+        sample_values:
+          - Paying
+          - Trialing
+        synonyms:
+          - company_status
+          - subscription_status
+          - account_status
+    time_dimensions:
+      - name: VIEW_DATE
+        expr: VIEW_DATE
+        data_type: DATE
+        description: Calendar date; one row exists for every company for every date in the range.
+        synonyms:
+          - date
+          - ds
+    facts: []
+    description: Company-date dimension with consistent INDUSTRY and time-varying STATUS (with ~10% Trialing-to-Paying conversions).
+    synonyms: []
+
+relationships:
+  - name: views_to_company_date
+    left_table: anon_views
+    right_table: anon_company_date_dim
+    relationship_columns:
+      - left_column: COMPANY_ID
+        right_column: COMPANY_ID
+      - left_column: VIEW_DATE
+        right_column: VIEW_DATE
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: user_to_company_date
+    left_table: anon_user_day_fact
+    right_table: anon_company_date_dim
+    relationship_columns:
+      - left_column: COMPANY_ID
+        right_column: COMPANY_ID
+      - left_column: VIEW_DATE
+        right_column: VIEW_DATE
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: company_fact_to_company_date
+    left_table: anon_company_day_fact
+    right_table: anon_company_date_dim
+    relationship_columns:
+      - left_column: COMPANY_ID
+        right_column: COMPANY_ID
+      - left_column: VIEW_DATE
+        right_column: VIEW_DATE
+    join_type: left_outer
+    relationship_type: many_to_one
